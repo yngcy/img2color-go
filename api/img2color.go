@@ -8,17 +8,15 @@ import (
 	"image"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/joho/godotenv"
-	"github.com/lucasb-eyer/go-colorful"
-	"github.com/nfnt/resize"
 	"github.com/disintegration/imaging"
+	"github.com/joho/godotenv"
+	"github.com/nfnt/resize"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -109,6 +107,7 @@ func extractMainColor(imgURL string) (string, error) {
 	}
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.253")
+	req.Header.Set("Referer", "https://color.yngcy.com/") // 标识后端调用
 
 	client := http.DefaultClient
 	resp, err := client.Do(req)
@@ -221,15 +220,27 @@ func isRefererAllowed(referer string) bool {
 		return true
 	}
 
-	for _, allowedReferer := range allowedReferers {
-		allowedReferer = strings.ReplaceAll(allowedReferer, ".", "\\.")
-		allowedReferer = strings.ReplaceAll(allowedReferer, "*", ".*")
-		match, _ := regexp.MatchString(allowedReferer, referer)
-		if match {
-			return true
-		}
+	u, err := url.Parse(referer)
+	if err != nil {
+		return false // 无效URL直接拒绝
 	}
 
+	// 获取完整域名 (e.g. "color.yngcy.com")
+	host := u.Hostname()
+
+	for _, allowed := range allowedReferers {
+		// 移除通配符语法，直接比较域名
+		if allowed == host {
+			return true
+		}
+		// 支持通配符如 *.yngcy.com
+		if strings.HasPrefix(allowed, "*.") {
+			domain := allowed[2:]
+			if strings.HasSuffix(host, domain) {
+				return true
+			}
+		}
+	}
 	return false
 }
 
