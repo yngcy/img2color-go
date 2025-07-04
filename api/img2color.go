@@ -105,9 +105,9 @@ func extractMainColor(imgURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	host := os.Getenv("HOST")
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.253")
-	req.Header.Set("Referer", "https://color.yngcy.com/") // 标识后端调用
+	req.Header.Set("Referer", host) // 标识后端调用
 
 	client := http.DefaultClient
 	resp, err := client.Do(req)
@@ -225,7 +225,7 @@ func isRefererAllowed(referer string) bool {
 		return false // 无效URL直接拒绝
 	}
 
-	// 获取完整域名 (e.g. "color.yngcy.com")
+	// 获取完整域名
 	host := u.Hostname()
 
 	for _, allowed := range allowedReferers {
@@ -233,7 +233,7 @@ func isRefererAllowed(referer string) bool {
 		if allowed == host {
 			return true
 		}
-		// 支持通配符如 *.yngcy.com
+		// 支持通配符如
 		if strings.HasPrefix(allowed, "*.") {
 			domain := allowed[2:]
 			if strings.HasSuffix(host, domain) {
