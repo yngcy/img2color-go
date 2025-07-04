@@ -14,9 +14,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/disintegration/imaging"
+	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
+	"github.com/lucasb-eyer/go-colorful"
 	"github.com/nfnt/resize"
+	"github.com/disintegration/imaging"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
