@@ -8,7 +8,6 @@ import (
 	"image"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -220,27 +219,15 @@ func isRefererAllowed(referer string) bool {
 		return true
 	}
 
-	u, err := url.Parse(referer)
-	if err != nil {
-		return false // 无效URL直接拒绝
-	}
-
-	// 获取完整域名
-	host := u.Hostname()
-
-	for _, allowed := range allowedReferers {
-		// 移除通配符语法，直接比较域名
-		if allowed == host {
+	for _, allowedReferer := range allowedReferers {
+		allowedReferer = strings.ReplaceAll(allowedReferer, ".", "\\.")
+		allowedReferer = strings.ReplaceAll(allowedReferer, "*", ".*")
+		match, _ := regexp.MatchString(allowedReferer, referer)
+		if match {
 			return true
 		}
-		// 支持通配符如
-		if strings.HasPrefix(allowed, "*.") {
-			domain := allowed[2:]
-			if strings.HasSuffix(host, domain) {
-				return true
-			}
-		}
 	}
+
 	return false
 }
 
